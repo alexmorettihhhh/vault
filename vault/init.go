@@ -84,7 +84,7 @@ func (c *Core) Initialized(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	rb := c.getRaftBackend()
+	rb := c.GetRaftBackend()
 	if rb != nil && rb.Initialized() {
 		return true, nil
 	}
@@ -241,7 +241,7 @@ func (c *Core) Initialize(ctx context.Context, initParams *InitParams) (*InitRes
 
 	// Bootstrap the raft backend if that's provided as the physical or
 	// HA backend.
-	raftBackend := c.getRaftBackend()
+	raftBackend := c.GetRaftBackend()
 	if raftBackend != nil {
 		err := c.RaftBootstrap(ctx, true)
 		if err != nil {

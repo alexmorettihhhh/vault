@@ -55,7 +55,7 @@ var (
 
 // GetRaftNodeID returns the raft node ID if there is one, or an empty string if there's not
 func (c *Core) GetRaftNodeID() string {
-	rb := c.getRaftBackend()
+	rb := c.GetRaftBackend()
 
 	if rb == nil {
 		return ""
@@ -79,7 +79,7 @@ func (c *Core) GetRaftIndexes() (committed uint64, applied uint64) {
 // startRaftBackend will call SetupCluster in the raft backend which starts raft
 // up and enables the cluster handler.
 func (c *Core) startRaftBackend(ctx context.Context) (retErr error) {
-	raftBackend := c.getRaftBackend()
+	raftBackend := c.GetRaftBackend()
 	if raftBackend == nil {
 		return nil
 	}
@@ -186,7 +186,7 @@ func (c *Core) monitorUndoLogs() error {
 	logger := c.logger.Named("undo-log-watcher")
 	logger.Debug("starting undo log watcher")
 	ctx := c.activeContext
-	raftBackend := c.getRaftBackend()
+	raftBackend := c.GetRaftBackend()
 
 	// First check storage and bail early if we already know undo logs are safe
 	persisted, err := c.UndoLogsPersisted()
@@ -299,7 +299,7 @@ func (c *Core) monitorUndoLogs() error {
 }
 
 func (c *Core) setupRaftActiveNode(ctx context.Context) error {
-	raftBackend := c.getRaftBackend()
+	raftBackend := c.GetRaftBackend()
 	if raftBackend == nil {
 		return nil
 	}
@@ -331,7 +331,7 @@ func (c *Core) setupRaftActiveNode(ctx context.Context) error {
 }
 
 func (c *Core) stopRaftActiveNode() {
-	raftBackend := c.getRaftBackend()
+	raftBackend := c.GetRaftBackend()
 	if raftBackend == nil {
 		return
 	}
@@ -347,7 +347,7 @@ func (c *Core) stopRaftActiveNode() {
 }
 
 func (c *Core) startPeriodicRaftTLSRotate(ctx context.Context) error {
-	raftBackend := c.getRaftBackend()
+	raftBackend := c.GetRaftBackend()
 
 	// No-op if raft is not being used
 	if raftBackend == nil {
@@ -692,7 +692,7 @@ func (c *Core) raftReadTLSKeyring(ctx context.Context) (*raft.TLSKeyring, error)
 // use. If a keyring entry is already present in storage, it will return an
 // error.
 func (c *Core) raftCreateTLSKeyring(ctx context.Context) (*raft.TLSKeyring, error) {
-	if raftBackend := c.getRaftBackend(); raftBackend == nil {
+	if raftBackend := c.GetRaftBackend(); raftBackend == nil {
 		return nil, fmt.Errorf("raft backend not in use")
 	}
 
@@ -735,7 +735,7 @@ func (c *Core) stopPeriodicRaftTLSRotate() {
 }
 
 func (c *Core) checkRaftTLSKeyUpgrades(ctx context.Context) error {
-	raftBackend := c.getRaftBackend()
+	raftBackend := c.GetRaftBackend()
 	if raftBackend == nil {
 		return nil
 	}
@@ -841,7 +841,7 @@ func (c *Core) raftSnapshotRestoreCallback(grabLock bool, sealNode bool) func(co
 }
 
 func (c *Core) InitiateRetryJoin(ctx context.Context) error {
-	raftBackend := c.getRaftBackend()
+	raftBackend := c.GetRaftBackend()
 	if raftBackend == nil {
 		return nil
 	}
@@ -929,7 +929,7 @@ func (c *Core) getRaftChallenge(leaderInfo *raft.LeaderJoinInfo) (*raftInformati
 
 	// Attempt to join the leader by requesting for the bootstrap challenge
 	secret, err := apiClient.Logical().Write("sys/storage/raft/bootstrap/challenge", map[string]interface{}{
-		"server_id": c.getRaftBackend().NodeID(),
+		"server_id": c.GetRaftBackend().NodeID(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error during raft bootstrap init call: %w", err)
@@ -970,7 +970,7 @@ func (c *Core) getRaftChallenge(leaderInfo *raft.LeaderJoinInfo) (*raftInformati
 }
 
 func (c *Core) JoinRaftCluster(ctx context.Context, leaderInfos []*raft.LeaderJoinInfo, nonVoter bool) (bool, error) {
-	raftBackend := c.getRaftBackend()
+	raftBackend := c.GetRaftBackend()
 	if raftBackend == nil {
 		return false, errors.New("raft backend not in use")
 	}
@@ -1236,9 +1236,9 @@ func (c *Core) raftLeaderInfo(leaderInfo *raft.LeaderJoinInfo, disco *discover.D
 	return ret, nil
 }
 
-// getRaftBackend returns the RaftBackend from the HA or physical backend,
+// GetRaftBackend returns the RaftBackend from the HA or physical backend,
 // in that order of preference, or nil if not of type RaftBackend.
-func (c *Core) getRaftBackend() *raft.RaftBackend {
+func (c *Core) GetRaftBackend() *raft.RaftBackend {
 	var raftBackend *raft.RaftBackend
 
 	if raftHA, ok := c.ha.(*raft.RaftBackend); ok {
@@ -1265,7 +1265,7 @@ func (c *Core) joinRaftSendAnswer(ctx context.Context, sealAccess *seal.Access, 
 		return errors.New("raft challenge is nil")
 	}
 
-	raftBackend := c.getRaftBackend()
+	raftBackend := c.GetRaftBackend()
 	if raftBackend == nil {
 		return errors.New("raft backend is not in use")
 	}
@@ -1369,7 +1369,7 @@ func (c *Core) RaftBootstrap(ctx context.Context, onInit bool) error {
 		defer c.logger.Debug("finished bootstrapping raft backend")
 	}
 
-	raftBackend := c.getRaftBackend()
+	raftBackend := c.GetRaftBackend()
 	if raftBackend == nil {
 		return errors.New("raft backend not in use")
 	}
