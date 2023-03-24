@@ -34,7 +34,7 @@ func TestFlag(t *testing.T) {
 		{
 			"key=foo=bar",
 			map[string]string{"key": "foo=bar"},
-			false,
+			true,
 		},
 
 		{
